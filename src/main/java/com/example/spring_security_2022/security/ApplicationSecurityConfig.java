@@ -8,17 +8,30 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+import static com.example.spring_security_2022.security.ApplicationUserRole.ADMIN;
+import static com.example.spring_security_2022.security.ApplicationUserRole.STUDENT;
 
 
 @Configuration
 @EnableWebSecurity
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    private final PasswordEncoder passwordEncoder;
+
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
+                .antMatchers("/","index","/css/*","/js/*").permitAll()
+                .antMatchers("/api/**").hasRole(STUDENT.name())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -29,12 +42,22 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     @Bean
     protected UserDetailsService userDetailsService() {
-        UserDetails userDetails = User.builder()
+        UserDetails userArif = User.builder()
                 .username("arif")
-                .password("arif")
-                .roles("STUDENT")
+                .password(passwordEncoder.encode("arif"))
+                .roles(STUDENT.name())
                 .build();
-        return new InMemoryUserDetailsManager(userDetails);
+
+        UserDetails userRobin = User.builder()
+                .username("robin")
+                .password(passwordEncoder.encode("robin123"))
+                .roles(ADMIN.name())
+                .build();
+
+        return new InMemoryUserDetailsManager(
+                userArif,
+                userRobin
+                );
     }
 
 }
